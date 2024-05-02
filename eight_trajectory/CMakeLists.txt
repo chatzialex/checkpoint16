@@ -10,6 +10,8 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(tf2 REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -24,7 +26,7 @@ if(BUILD_TESTING)
 endif()
 
 add_executable(eight_trajectory src/eight_trajectory.cpp)
-ament_target_dependencies(eight_trajectory rclcpp nav_msgs geometry_msgs)
+ament_target_dependencies(eight_trajectory rclcpp nav_msgs geometry_msgs std_msgs tf2)
 
 install(
 	TARGETS 
