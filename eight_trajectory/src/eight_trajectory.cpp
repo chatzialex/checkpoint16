@@ -2,6 +2,7 @@
 #include "geometry_msgs/msg/detail/quaternion__struct.hpp"
 #include "geometry_msgs/msg/detail/twist__struct.hpp"
 #include "nav_msgs/msg/detail/odometry__struct.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -52,7 +53,10 @@ public:
                                       std::bind(&EightTrajectory::odomSubCb,
                                                 this, std::placeholders::_1))},
         wheel_speed_pub_{this->create_publisher<Float32MultiArray>(
-            kWheelSpeedTopicName, 1)} {}
+            kWheelSpeedTopicName, 1)} {
+
+    RCLCPP_INFO(this->get_logger(), "%s node started.", node_name.c_str());
+  }
 
   bool followTrajectory(const PoseArray &goal_poses);
 
@@ -144,9 +148,17 @@ Twist EightTrajectory::computeTwist(double dx, double dy, double dtheta) {
 }
 
 bool EightTrajectory::goToPose(const Pose &goal_pose_relative) {
-  const auto x_goal{goal_pose_relative.position.x + x_cur_};
-  const auto y_goal{goal_pose_relative.position.y + y_cur_};
-  const auto theta_goal{getYaw(goal_pose_relative.orientation) + theta_cur_};
+  const auto x_goal_relative{goal_pose_relative.position.x};
+  const auto y_goal_relative{goal_pose_relative.position.y};
+  const auto theta_goal_relative{getYaw(goal_pose_relative.orientation)};
+
+  RCLCPP_INFO(this->get_logger(),
+              "Received new relative waypoint: dx=%f dy=%f dtheta=%f",
+              x_goal_relative, y_goal_relative, theta_goal_relative);
+
+  const auto x_goal{x_goal_relative + x_cur_};
+  const auto y_goal{y_goal_relative + y_cur_};
+  const auto theta_goal{theta_goal_relative + theta_cur_};
 
   double dx{}, dy{}, dtheta{};
   for (;;) {
@@ -158,6 +170,7 @@ bool EightTrajectory::goToPose(const Pose &goal_pose_relative) {
     if (std::abs(dtheta) < kAngleTolerance &&
         std::sqrt(dx * dx + dy * dy) < kPositionTolerance) {
       wheel_speed_pub_->publish(twistToWheels(Twist{}));
+      RCLCPP_INFO(this->get_logger(), "Reached waypoint.");
       return true;
     }
 
@@ -167,11 +180,15 @@ bool EightTrajectory::goToPose(const Pose &goal_pose_relative) {
 }
 
 bool EightTrajectory::followTrajectory(const PoseArray &goal_poses) {
+  RCLCPP_INFO(this->get_logger(), "Received new goal trajectory.");
+
   for (const auto &goal_pose : goal_poses.poses) {
     if (!goToPose(goal_pose)) {
+      RCLCPP_WARN(this->get_logger(), "Failed to follow goal trajectory.");
       return false;
     }
   }
+  RCLCPP_INFO(this->get_logger(), "Reached goal.");
   return true;
 }
 
