@@ -125,8 +125,9 @@ Twist EightTrajectory::scaleTwist(const Twist &twist, double /*ds*/,
                                   double /*dtheta*/) {
   const auto v_norm{std::sqrt(twist.linear.x * twist.linear.x +
                               twist.linear.y * twist.linear.y)};
-  const auto v_scale_factor{kMaxLinearVelocity / v_norm};
-  const auto w_scale_factor{std::abs(kMaxAngularVelocity / twist.angular.z)};
+  const auto v_scale_factor{kMaxLinearVelocity / (v_norm + 1e-5)};
+  const auto w_scale_factor{
+      std::abs(kMaxAngularVelocity / (twist.angular.z + 1e-5))};
 
   Twist twist_scaled;
   twist_scaled.linear.x = v_scale_factor * twist.linear.x;
