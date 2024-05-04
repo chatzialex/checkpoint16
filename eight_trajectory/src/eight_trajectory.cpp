@@ -22,6 +22,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <optional>
 
 using Pose = geometry_msgs::msg::Pose;
 using PoseArray = geometry_msgs::msg::PoseArray;
@@ -85,9 +86,9 @@ private:
   rclcpp::Subscription<Odometry>::SharedPtr odom_sub_{};
   rclcpp::Publisher<Float32MultiArray>::SharedPtr wheel_speed_pub_{};
 
-  double x_cur_{};
-  double y_cur_{};
-  double theta_cur_{};
+  std::optional<double> x_cur_{std::nullopt};
+  std::optional<double> y_cur_{std::nullopt};
+  std::optional<double> theta_cur_{std::nullopt};
 };
 
 void EightTrajectory::odomSubCb(const std::shared_ptr<const Odometry> msg) {
@@ -157,16 +158,21 @@ bool EightTrajectory::goToPose(const Pose &goal_pose_relative) {
               "Received new relative waypoint: dx=%f dy=%f dtheta=%f",
               x_goal_relative, y_goal_relative, theta_goal_relative);
 
-  const auto x_goal{x_goal_relative + x_cur_};
-  const auto y_goal{y_goal_relative + y_cur_};
-  const auto theta_goal{theta_goal_relative + theta_cur_};
+  while (!x_cur_ || !y_cur_ || !theta_cur_) {
+    RCLCPP_WARN(this->get_logger(), "Odometry not received yet, waiting...");
+    rclcpp::sleep_for(1s);
+  }
+
+  const auto x_goal{x_goal_relative + x_cur_.value()};
+  const auto y_goal{y_goal_relative + y_cur_.value()};
+  const auto theta_goal{theta_goal_relative + theta_cur_.value()};
 
   double dx{}, dy{}, dtheta{};
   for (;;) {
-    dx = x_goal - x_cur_;
-    dy = y_goal - y_cur_;
-    dtheta = std::atan2(std::sin(theta_goal - theta_cur_),
-                        std::cos(theta_goal - theta_cur_));
+    dx = x_goal - x_cur_.value();
+    dy = y_goal - y_cur_.value();
+    dtheta = std::atan2(std::sin(theta_goal - theta_cur_.value()),
+                        std::cos(theta_goal - theta_cur_.value()));
 
     if (std::abs(dtheta) < kAngleTolerance &&
         std::sqrt(dx * dx + dy * dy) < kPositionTolerance) {
