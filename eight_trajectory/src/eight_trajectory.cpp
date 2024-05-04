@@ -199,49 +199,55 @@ PoseArray createGoal() {
   Pose goal_pose;
 
   // w1
-  // goal_pose.orientation = 0.0;
+  goal_pose.orientation.x = 0.0;
+  goal_pose.orientation.y = 0.0;
+  goal_pose.orientation.z = 0.0;
+  goal_pose.orientation.w = 1.0;
   goal_pose.position.x = 1;
   goal_pose.position.y = -1;
   goal_poses.poses.push_back(goal_pose);
 
   // w2
-  // goal_pose.orientation = 0.0;
+  // goal_pose.orientation same as before
   goal_pose.position.x = 1;
   goal_pose.position.y = 1;
   goal_poses.poses.push_back(goal_pose);
 
   // w3
-  // goal_pose.orientation = 0.0;
+  // goal_pose.orientation same as before
   goal_pose.position.x = 1;
   goal_pose.position.y = 1;
   goal_poses.poses.push_back(goal_pose);
 
   // w4
-  // goal_pose.orientation = 1.5708;
+  goal_pose.orientation.z = 0.7070727;
+  goal_pose.orientation.w = 0.7071408;
   goal_pose.position.x = 1;
   goal_pose.position.y = -1;
   goal_poses.poses.push_back(goal_pose);
 
   // w5
-  // goal_pose.orientation = -3.1415;
+  goal_pose.orientation.z = -1.0;
+  goal_pose.orientation.w = 0.0;
   goal_pose.position.x = -1;
   goal_pose.position.y = -1;
   goal_poses.poses.push_back(goal_pose);
 
   // w6
-  // goal_pose.orientation = 0.0;
+  goal_pose.orientation.z = 0.0;
+  goal_pose.orientation.w = 1.0;
   goal_pose.position.x = -1;
   goal_pose.position.y = 1;
   goal_poses.poses.push_back(goal_pose);
 
   // w7
-  // goal_pose.orientation = 0.0
+  // goal pose orientation as before
   goal_pose.position.x = -1;
   goal_pose.position.y = 1;
   goal_poses.poses.push_back(goal_pose);
 
   // w8
-  // goal_pose.orientation = 0.0;
+  // goal pose orientation as before
   goal_pose.position.x = -1;
   goal_pose.position.y = -1;
   goal_poses.poses.push_back(goal_pose);
