@@ -71,7 +71,7 @@ private:
 
   constexpr static double kPositionTolerance{0.1}; // [m]
   constexpr static double kAngleTolerance{0.1};    // [rad]
-  constexpr static auto kControlCycle{100ms};
+  constexpr static auto kControlCycle{10ms};
   constexpr static double kMaxLinearVelocity{0.2};  // [m/s]
   constexpr static double kMaxAngularVelocity{0.2}; // [rad/s]
 
