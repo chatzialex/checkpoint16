@@ -142,9 +142,13 @@ Twist EightTrajectory::computeTwist(double dx, double dy, double dtheta) {
   const auto ds{std::sqrt(dx * dx + dy * dy)};
 
   Twist twist{};
-  twist.linear.x = dx;
-  twist.linear.y = dy;
-  twist.angular.z = dtheta;
+  if (std::abs(dtheta) > kAngleTolerance) {
+    twist.angular.z = dtheta;
+  }
+  if (ds > kPositionTolerance) {
+    twist.linear.x = dx;
+    twist.linear.y = dy;
+  }
 
   return scaleTwist(twist, ds, dtheta);
 }
@@ -174,8 +178,8 @@ bool EightTrajectory::goToPose(const Pose &goal_pose_relative) {
     dtheta = std::atan2(std::sin(theta_goal - theta_cur_.value()),
                         std::cos(theta_goal - theta_cur_.value()));
 
-    if (std::abs(dtheta) < kAngleTolerance &&
-        std::sqrt(dx * dx + dy * dy) < kPositionTolerance) {
+    if (std::abs(dtheta) <= kAngleTolerance &&
+        std::sqrt(dx * dx + dy * dy) <= kPositionTolerance) {
       wheel_speed_pub_->publish(twistToWheels(Twist{}));
       RCLCPP_INFO(this->get_logger(), "Reached waypoint.");
       return true;
