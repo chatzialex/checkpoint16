@@ -64,7 +64,7 @@ public:
 private:
   constexpr static char kWheelSpeedTopicName[]{"wheel_speed"};
   constexpr static char kNodeName[]{"eight_trajectory"};
-  constexpr static char kOdometryTopicName[]{"/odom"};
+  constexpr static char kOdometryTopicName[]{"/odometry/filtered"};
 
   constexpr static double kWheelRadius{0.050};       // [m]
   constexpr static double kHalfTrackWidth{0.10709};  // [m]
