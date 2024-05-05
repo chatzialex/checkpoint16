@@ -78,9 +78,10 @@ private:
 
   void odomSubCb(const std::shared_ptr<const Odometry> msg);
 
-  Float32MultiArray twistToWheels(const Twist &twist);
-  Twist scaleTwist(const Twist &twist, double /*ds*/, double /*dtheta*/);
-  Twist computeTwist(double dx, double dy, double dtheta);
+  Float32MultiArray twistToWheels(const Twist &twist) const;
+  Twist scaleTwist(const Twist &twist, double /*ds*/, double /*dtheta*/) const;
+  Twist velocityToTwist(const Twist &velocity) const;
+  Twist computeVelocity(double dx, double dy, double dtheta) const;
   bool goToPose(const Pose &goal_pose_relative);
 
   rclcpp::Subscription<Odometry>::SharedPtr odom_sub_{};
@@ -97,7 +98,7 @@ void EightTrajectory::odomSubCb(const std::shared_ptr<const Odometry> msg) {
   theta_cur_ = getYaw(msg->pose.pose.orientation);
 }
 
-Float32MultiArray EightTrajectory::twistToWheels(const Twist &twist) {
+Float32MultiArray EightTrajectory::twistToWheels(const Twist &twist) const {
   const auto w_z{twist.angular.z};
   const auto v_x{twist.linear.x};
   const auto v_y{twist.linear.y};
@@ -123,7 +124,7 @@ Float32MultiArray EightTrajectory::twistToWheels(const Twist &twist) {
 }
 
 Twist EightTrajectory::scaleTwist(const Twist &twist, double /*ds*/,
-                                  double /*dtheta*/) {
+                                  double /*dtheta*/) const {
   const auto v_norm{std::sqrt(twist.linear.x * twist.linear.x +
                               twist.linear.y * twist.linear.y)};
   const auto v_scale_factor{kMaxLinearVelocity / (v_norm + 1e-5)};
@@ -138,7 +139,19 @@ Twist EightTrajectory::scaleTwist(const Twist &twist, double /*ds*/,
   return twist_scaled;
 }
 
-Twist EightTrajectory::computeTwist(double dx, double dy, double dtheta) {
+Twist EightTrajectory::velocityToTwist(const Twist &velocity) const {
+  Twist twist{};
+
+  twist.angular.z = velocity.angular.z;
+  twist.linear.x = std::cos(theta_cur_.value()) * velocity.linear.x +
+                   std::sin(theta_cur_.value()) * velocity.linear.y;
+  twist.linear.y = -std::sin(theta_cur_.value()) * velocity.linear.x +
+                   std::cos(theta_cur_.value()) * velocity.linear.y;
+  return twist;
+}
+
+Twist EightTrajectory::computeVelocity(double dx, double dy,
+                                       double dtheta) const {
   const auto ds{std::sqrt(dx * dx + dy * dy)};
 
   Twist twist{};
@@ -185,7 +198,8 @@ bool EightTrajectory::goToPose(const Pose &goal_pose_relative) {
       return true;
     }
 
-    wheel_speed_pub_->publish(twistToWheels(computeTwist(dx, dy, dtheta)));
+    wheel_speed_pub_->publish(
+        twistToWheels(velocityToTwist(computeVelocity(dx, dy, dtheta))));
     rclcpp::sleep_for(kControlCycle);
   }
 }
